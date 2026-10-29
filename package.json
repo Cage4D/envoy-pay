@@ -1,0 +1,7 @@
+{
+  "name": "envoy-pay",
+  "private": true,
+  "dependencies": {
+    "@openzeppelin/contracts": "5.1.0"
+  }
+}
