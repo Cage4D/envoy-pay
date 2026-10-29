@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ExternalLink } from 'lucide-react'
+import { CircleCheck, ExternalLink, PauseCircle } from 'lucide-react'
 import type { Address } from 'viem'
-import { appConfig, explorerAddressUrl } from '../config'
+import { explorerAddressUrl } from '../config'
 import { formatDuration, formatUsdc, shortAddress } from '../lib/format'
 import type { VaultState } from '../hooks/useVaultState'
 
@@ -40,7 +40,9 @@ export function Summary({
         <p className="hero-number">{loading ? '...' : '--'}</p>
         {error && (
           <>
-            <p className="field-error">Could not read the vault. Check the RPC URL and vault address in src/config.ts.</p>
+            <p className="field-error" role="alert">
+              Could not read the vault. Check the RPC URL and vault address in src/config.ts.
+            </p>
             <details className="details">
               <summary>Show error details</summary>
               <pre>{error.message}</pre>
@@ -63,7 +65,10 @@ export function Summary({
       <section className="card hero">
         <div className="hero-top">
           <p className="label">Vault balance</p>
-          <span className={state.paused ? 'pill pill-red' : 'pill pill-green'}>{state.paused ? 'Paused' : 'Active'}</span>
+          <span className={state.paused ? 'pill pill-red' : 'pill pill-green'}>
+            {state.paused ? <PauseCircle size={14} aria-hidden /> : <CircleCheck size={14} aria-hidden />}
+            {state.paused ? 'Paused' : 'Active'}
+          </span>
         </div>
         <p className="hero-number tnum">
           {formatUsdc(state.vaultBalance)} <span className="hero-unit">USDC</span>
@@ -72,8 +77,9 @@ export function Summary({
           <div className="meter-fill" style={{ width: `${Math.min(100, usedPct)}%` }} />
         </div>
         <p className="subline tnum">
-          {formatUsdc(spentNow)} spent of {formatUsdc(state.cap)} cap this window
+          {formatUsdc(spentNow)} paid by the agent this window (cap {formatUsdc(state.cap)})
         </p>
+        <p className="muted small">Counts agent payments only. Owner deposits and withdrawals do not count.</p>
       </section>
 
       <section className="card">
@@ -84,7 +90,9 @@ export function Summary({
           </div>
           <div>
             <dt>Window resets in</dt>
-            <dd className="tnum">{windowActive ? (secondsLeft > 0 ? formatDuration(secondsLeft) : 'resetting') : 'No active window'}</dd>
+            <dd className="tnum" aria-live="off">
+              {windowActive ? (secondsLeft > 0 ? formatDuration(secondsLeft) : 'resetting') : 'No active window'}
+            </dd>
           </div>
           <div>
             <dt>Cap per window</dt>
@@ -120,9 +128,6 @@ export function Summary({
             ))}
           </ul>
         )}
-        <p className="muted small">
-          Vault <AddressLink address={appConfig.vaultAddress} />
-        </p>
       </section>
     </>
   )

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useAccount } from 'wagmi'
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ExternalLink, Loader2, TriangleAlert } from 'lucide-react'
 import { formatUnits, isAddress, type Address } from 'viem'
 import { appConfig, explorerTxUrl } from '../config'
 import * as actions from '../lib/actions'
@@ -13,8 +13,19 @@ const UNITS = { minutes: 60, hours: 3600, days: 86400 } as const
 function Section({ title, hint, children }: { title: string; hint?: ReactNode; children: ReactNode }) {
   return (
     <div className="action">
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       {hint && <p className="muted small">{hint}</p>}
+      {children}
+    </div>
+  )
+}
+
+function Field({ id, label, narrow, children }: { id: string; label: string; narrow?: boolean; children: ReactNode }) {
+  return (
+    <div className={narrow ? 'field field-narrow' : 'field'}>
+      <label className="field-label" htmlFor={id}>
+        {label}
+      </label>
       {children}
     </div>
   )
@@ -58,14 +69,16 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
     <section className="card">
       <div className="hero-top">
         <p className="label">Owner actions</p>
-        {isConnected && state && !isOwner && <span className="pill pill-red">Not the owner wallet</span>}
+        {isConnected && state && !isOwner && <span className="pill pill-red">
+            <TriangleAlert size={14} aria-hidden /> Not the owner wallet
+          </span>}
       </div>
       {!isConnected && <p className="muted">Connect the owner wallet to make changes.</p>}
       {isConnected && state && !isOwner && (
         <p className="muted">Only the vault owner can make changes. Switch to the owner wallet to enable these actions.</p>
       )}
 
-      <div aria-live="polite">
+      <div aria-live="polite" aria-atomic="false">
         {status.phase === 'wallet' && (
           <p className="banner">
             <Loader2 size={16} className="spin" aria-hidden /> Confirm "{status.label}" in your wallet.
@@ -120,7 +133,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             })
           }
         >
-          <input inputMode="decimal" placeholder="Amount in USDC" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} disabled={locked} />
+          <Field id="deposit-amount" label="Deposit amount (USDC)">
+            <input id="deposit-amount" inputMode="decimal" placeholder="Amount in USDC" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} disabled={locked} />
+          </Field>
           <button className="btn btn-primary" disabled={locked}>
             Approve and deposit
           </button>
@@ -141,7 +156,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
           }
         >
           <div className="row">
-            <input inputMode="decimal" placeholder="Amount in USDC" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} disabled={locked} />
+            <Field id="withdraw-amount" label="Withdraw amount (USDC)">
+            <input id="withdraw-amount" inputMode="decimal" placeholder="Amount in USDC" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} disabled={locked} />
+          </Field>
             <button
               type="button"
               className="btn btn-chip"
@@ -152,7 +169,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             </button>
           </div>
           <div className="row">
-            <input placeholder="Recipient (optional)" value={withdrawTo} onChange={(e) => setWithdrawTo(e.target.value)} disabled={locked} />
+            <Field id="withdraw-to" label="Recipient (optional)">
+            <input id="withdraw-to" placeholder="Recipient (optional)" value={withdrawTo} onChange={(e) => setWithdrawTo(e.target.value)} disabled={locked} />
+          </Field>
             <button className="btn btn-primary" disabled={locked}>
               Withdraw
             </button>
@@ -171,7 +190,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             })
           }
         >
-          <input placeholder="Agent address (0x...)" value={agentInput} onChange={(e) => setAgentInput(e.target.value)} disabled={locked} />
+          <Field id="agent-address" label="Agent address">
+            <input id="agent-address" placeholder="Agent address (0x...)" value={agentInput} onChange={(e) => setAgentInput(e.target.value)} disabled={locked} />
+          </Field>
           <button className="btn btn-primary" disabled={locked}>
             Set agent
           </button>
@@ -197,7 +218,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             })
           }
         >
-          <input placeholder="Payee address (0x...)" value={payeeInput} onChange={(e) => setPayeeInput(e.target.value)} disabled={locked} />
+          <Field id="payee-address" label="Payee address">
+            <input id="payee-address" placeholder="Payee address (0x...)" value={payeeInput} onChange={(e) => setPayeeInput(e.target.value)} disabled={locked} />
+          </Field>
           <button className="btn btn-primary" disabled={locked}>
             Add
           </button>
@@ -229,7 +252,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             })
           }
         >
-          <input inputMode="decimal" placeholder="Cap in USDC" value={capInput} onChange={(e) => setCapInput(e.target.value)} disabled={locked} />
+          <Field id="cap-amount" label="Cap (USDC)">
+            <input id="cap-amount" inputMode="decimal" placeholder="Cap in USDC" value={capInput} onChange={(e) => setCapInput(e.target.value)} disabled={locked} />
+          </Field>
           <button className="btn btn-primary" disabled={locked}>
             Set cap
           </button>
@@ -249,12 +274,16 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             })
           }
         >
-          <input inputMode="decimal" placeholder="Length" value={windowValue} onChange={(e) => setWindowValue(e.target.value)} disabled={locked} />
-          <select value={windowUnit} onChange={(e) => setWindowUnit(e.target.value as keyof typeof UNITS)} disabled={locked} aria-label="Window unit">
+          <Field id="window-length" label="Length">
+            <input id="window-length" inputMode="decimal" placeholder="Length" value={windowValue} onChange={(e) => setWindowValue(e.target.value)} disabled={locked} />
+          </Field>
+          <Field id="window-unit" label="Unit" narrow>
+            <select id="window-unit" value={windowUnit} onChange={(e) => setWindowUnit(e.target.value as keyof typeof UNITS)} disabled={locked}>
             <option value="minutes">minutes</option>
             <option value="hours">hours</option>
             <option value="days">days</option>
-          </select>
+            </select>
+          </Field>
           <button className="btn btn-primary" disabled={locked}>
             Set window
           </button>

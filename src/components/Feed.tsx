@@ -26,7 +26,7 @@ export function Feed({
               : `Up to block ${progress.scanned.toString()}`}
         </span>
       </div>
-      {error && <p className="field-error">Could not read events right now. Retrying.</p>}
+      {error && <p className="field-error" role="status">Could not read events right now. Retrying.</p>}
       {events.length === 0 ? (
         <p className="muted">{catchingUp ? 'Looking through recent blocks...' : 'No payments or rejections yet.'}</p>
       ) : (

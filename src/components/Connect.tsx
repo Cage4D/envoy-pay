@@ -23,7 +23,7 @@ export function Connect() {
         <Wallet size={16} aria-hidden />
         {isPending ? 'Check your wallet...' : 'Connect owner wallet'}
       </button>
-      {error && <p className="field-error">{error.message.includes('rejected') ? 'Connection cancelled.' : 'No browser wallet found. Install one and reload.'}</p>}
+      {error && <p className="field-error" role="alert">{error.message.includes('rejected') ? 'Connection cancelled.' : 'No browser wallet found. Install one and reload.'}</p>}
     </div>
   )
 }

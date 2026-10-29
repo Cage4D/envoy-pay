@@ -4,8 +4,9 @@
   --card-border: rgba(11, 27, 58, 0.08);
   --ink: #0b1b3a;
   --muted: #5d6b82;
-  --accent: #5b7190;
-  --green: #15803d;
+  --control-border: #7b8697;
+  --accent: #546a89;
+  --green: #136f35;
   --green-bg: #e3f4e8;
   --red: #b42318;
   --red-bg: #fde8e6;
@@ -29,6 +30,7 @@ body {
 }
 
 h1,
+h2,
 h3,
 p,
 dl,
@@ -43,6 +45,7 @@ h1 {
   letter-spacing: -0.02em;
 }
 
+h2,
 h3 {
   font-family: var(--font-display);
   font-size: 15px;
@@ -215,6 +218,9 @@ h3 {
 }
 
 .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 600;
   padding: 3px 10px;
@@ -243,6 +249,7 @@ h3 {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .stack {
@@ -258,7 +265,7 @@ select {
   min-height: 44px;
   padding: 0 14px;
   border-radius: 12px;
-  border: 1px solid rgba(11, 27, 58, 0.14);
+  border: 1px solid var(--control-border);
   background: rgba(255, 255, 255, 0.9);
   color: var(--ink);
   font: inherit;
@@ -268,10 +275,44 @@ select {
   flex: 0 0 auto;
 }
 
+input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.field input,
+.field select {
+  flex: none;
+  width: 100%;
+}
+
+.field-narrow {
+  flex: 0 0 auto;
+}
+
+.field-narrow select {
+  width: auto;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Visible focus ring on every interactive element. */
+a:focus-visible,
+button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-.btn:focus-visible,
-.icon-link:focus-visible {
+summary:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -308,7 +349,7 @@ select:disabled {
 .btn-ghost {
   background: transparent;
   color: var(--ink);
-  border-color: rgba(11, 27, 58, 0.18);
+  border-color: var(--control-border);
 }
 
 .btn-chip {
