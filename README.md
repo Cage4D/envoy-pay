@@ -8,6 +8,8 @@ Built with [Arc Studio](https://studio.arc.io)
 
 - Solidity 0.8.28 (Paris EVM target), OpenZeppelin Contracts 5.1.0
 - Foundry (forge) for build and tests
+- Owner dashboard: Vite, React, TypeScript, wagmi and viem (browser wallet only, no keys in the frontend)
+- Agent demo script: Node.js (20.6 or newer) with TypeScript, run through `tsx`
 - Target network: Arc Testnet (chain ID 5042002), USDC at `0x3600000000000000000000000000000000000000` (6 decimals)
 
 ## EnvoyVault
@@ -71,7 +73,63 @@ A static analysis run (Slither) reported no serious findings. Its two medium not
 
 ### Environment variables
 
-None.
+The dashboard reads none. All of its chain details live in `src/config.ts`.
+
+The agent demo script reads `agent/.env` (gitignored; copy `agent/.env.example`):
+
+| Variable | Purpose |
+| --- | --- |
+| `AGENT_PRIVATE_KEY` | Key of the registered agent. Use a dedicated test key. |
+| `RPC_URL`, `CHAIN_ID`, `CHAIN_NAME`, `EXPLORER_BASE_URL`, `USDC_DECIMALS` | Network details |
+| `VAULT_ADDRESS` | The deployed EnvoyVault |
+| `ALLOWED_PAYEE` | An address the owner has allowlisted |
+| `NOT_ALLOWED_PAYEE` | Optional. An address that is not a payee (defaults to the `0x...dEaD` burn address) |
+| `PAY_AMOUNT_USDC` | Optional. Amount for the first demo step (default 0.01). The script stops before sending anything if it exceeds the remaining allowance or the vault balance. |
+
+## Owner dashboard
+
+A static single-page app for the vault owner.
+
+```bash
+bun install
+bun run dev        # http://localhost:5173
+bun run build      # production build in dist/
+```
+
+- Connect the owner wallet (a browser wallet; the app never handles a private key).
+- It shows the vault balance, agent, payees, cap, window length, spent, remaining and time until the window resets, in 6-decimal USDC.
+- Owner actions: approve and deposit, withdraw, set or revoke the agent, add or remove payees, set the cap, set the window length, and pause or unpause. If you connect a wallet that is not the owner, the actions stay disabled.
+- A live feed lists `PaymentExecuted` and `PaymentRejected` events with the reason label and a link to each transaction. It reads recent blocks in small ranges every few seconds.
+- The payee list is rebuilt from the vault's `PayeeUpdated` events, starting at the deployment block, and checked against the chain.
+
+### Pointing it at another network or vault
+
+Edit `src/config.ts` only: chain ID, RPC URL, explorer URL, vault address, USDC address and the vault's deployment block. If you move to mainnet, review every value yourself first: mainnet transactions use real funds and cannot be undone.
+
+### Deploy to Vercel
+
+Import the repository in Vercel and use: framework preset Vite, build command `bun run build` (or `npm run build`), output directory `dist`. No environment variables are needed.
+
+## Agent demo script
+
+Runs on your machine only. It is not part of the deployed site.
+
+1. The owner sets your agent address as the agent and allowlists a payee (from the dashboard), then deposits some USDC.
+2. Fund the agent wallet with a little testnet USDC for gas (Arc pays gas in USDC).
+3. Set it up and run:
+
+```bash
+cp agent/.env.example agent/.env   # then fill in AGENT_PRIVATE_KEY and ALLOWED_PAYEE
+bun run agent
+```
+
+The script checks the setup, then runs three `tryPay` calls and prints each transaction hash and explorer link:
+
+- (a) pay the allowlisted payee, which logs `PaymentExecuted`
+- (b) try a payee that is not allowlisted, which logs `PaymentRejected` with reason 1
+- (c) try to pay more than the cap, which logs `PaymentRejected` with reason 3
+
+Other scripts: `bun run typecheck` checks the dashboard and agent code.
 
 ## Testnet deployment
 

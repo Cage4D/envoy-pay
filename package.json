@@ -2,6 +2,29 @@
   "name": "envoy-pay",
   "private": true,
   "dependencies": {
-    "@openzeppelin/contracts": "5.1.0"
+    "@openzeppelin/contracts": "5.1.0",
+    "@tanstack/react-query": "^5.105.0",
+    "lucide-react": "^1.64.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "viem": "^2.57.13",
+    "wagmi": "^3.7.9"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "agent": "tsx agent/agent.ts"
   }
 }

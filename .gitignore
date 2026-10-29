@@ -6,3 +6,4 @@ contracts/out/
 contracts/cache/
 traces.jsonl
 console.jsonl
+dist/

@@ -12,3 +12,9 @@
 - Immutable vault, Ownable2Step, renounce disabled.
 - Native-precision dust below 0.000001 USDC is unrecoverable by design (accepted).
 - Foundry setup: forge-std v1.9.7 is cloned into node_modules (not tracked); see README.
+
+## App
+
+- `src/config.ts` is the only place with chain details (chain ID, RPC, explorer, vault, USDC, deployment block).
+- Dashboard: Vite + React + wagmi (injected wallet only). Agent demo: `agent/agent.ts`, config from `agent/.env` (gitignored).
+- Event scanning starts at `vaultDeploymentBlock`; cursor and results are cached in localStorage.
