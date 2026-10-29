@@ -8,7 +8,18 @@ import { defineChain, type Address } from 'viem'
 export const appConfig = {
   chainId: 5042002,
   chainName: 'Arc Testnet',
-  rpcUrl: 'https://rpc.testnet.arc.io',
+  /**
+   * The real RPC endpoint. Only used by the dev/preview proxy in vite.config.ts and as the URL
+   * wallets are given when they add the chain. When switching networks, update this together
+   * with the rewrite destination in vercel.json: they must always point at the same endpoint.
+   */
+  upstreamRpcUrl: 'https://rpc.testnet.arc.io',
+  /**
+   * What the browser actually calls: a same-origin path, so browsers (Firefox, Brave) never make a
+   * cross-origin request. Served by the Vite proxy in dev and the vercel.json rewrite in production.
+   * viem needs an absolute URL, hence window.location.origin.
+   */
+  rpcUrl: `${typeof window === 'undefined' ? '' : window.location.origin}/rpc`,
   explorerBaseUrl: 'https://explorer.testnet.arc.io',
   /** Arc's gas coin is USDC itself (18-decimal native view, used for gas only). */
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
@@ -32,7 +43,8 @@ export const chain = defineChain({
   id: appConfig.chainId,
   name: appConfig.chainName,
   nativeCurrency: appConfig.nativeCurrency,
-  rpcUrls: { default: { http: [appConfig.rpcUrl] } },
+  // Wallets get the real endpoint when adding the chain; the app's own reads use appConfig.rpcUrl.
+  rpcUrls: { default: { http: [appConfig.upstreamRpcUrl] } },
   blockExplorers: { default: { name: 'Explorer', url: appConfig.explorerBaseUrl } },
 })
 

@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/rpc", "destination": "https://rpc.testnet.arc.io" }]
+}

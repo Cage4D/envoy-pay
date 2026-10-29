@@ -423,3 +423,23 @@ select:disabled {
     transition: none;
   }
 }
+
+.details {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.details summary {
+  cursor: pointer;
+  min-height: 24px;
+}
+
+.details pre {
+  margin: 6px 0 0;
+  max-height: 160px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}

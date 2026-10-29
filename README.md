@@ -102,13 +102,24 @@ bun run build      # production build in dist/
 - A live feed lists `PaymentExecuted` and `PaymentRejected` events with the reason label and a link to each transaction. It reads recent blocks in small ranges every few seconds.
 - The payee list is rebuilt from the vault's `PayeeUpdated` events, starting at the deployment block, and checked against the chain.
 
+### How the dashboard reaches the RPC
+
+Browsers such as Firefox and Brave can block a direct request to the RPC from a web page. So the dashboard only ever calls a same-origin path, `/rpc`, and the server forwards it:
+
+- in development (`bun run dev`, `bun run preview`) the Vite proxy in `vite.config.ts` forwards `/rpc`
+- on Vercel, the rewrite in `vercel.json` forwards `/rpc` (POST requests pass through)
+
+All reads (vault state, balances, payees, event logs) use this path through a plain HTTP client. The wallet is only used to sign transactions. If the vault cannot be read, the page shows the underlying error under "Show error details".
+
+The agent script is separate: it runs locally and calls the RPC directly, using `RPC_URL` from `agent/.env`.
+
 ### Pointing it at another network or vault
 
-Edit `src/config.ts` only: chain ID, RPC URL, explorer URL, vault address, USDC address and the vault's deployment block. If you move to mainnet, review every value yourself first: mainnet transactions use real funds and cannot be undone.
+Edit `src/config.ts`: chain ID, RPC, explorer, vault and USDC addresses, and the vault's deployment block. Keep `upstreamRpcUrl` in `src/config.ts` and the rewrite destination in `vercel.json` identical: change them together.
 
 ### Deploy to Vercel
 
-Import the repository in Vercel and use: framework preset Vite, build command `bun run build` (or `npm run build`), output directory `dist`. No environment variables are needed.
+Import the repository in Vercel and use: framework preset Vite, build command `bun run build` (or `npm run build`), output directory `dist`. No environment variables are needed. `vercel.json` already contains the `/rpc` rewrite, so reads work without any extra setup.
 
 ## Agent demo script
 

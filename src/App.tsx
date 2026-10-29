@@ -39,7 +39,7 @@ export default function App() {
 
       <main className="layout">
         <div className="col col-sticky">
-          <Summary state={vault.data} loading={vault.isLoading} error={vault.isError} payees={payees.data ?? []} />
+          <Summary state={vault.data} loading={vault.isLoading} error={vault.error} payees={payees.data ?? []} />
         </div>
         <div className="col">
           <Actions state={vault.data} onChanged={refresh} />

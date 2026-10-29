@@ -24,7 +24,7 @@ export function Summary({
 }: {
   state: VaultState | undefined
   loading: boolean
-  error: boolean
+  error: Error | null
   payees: Address[]
 }) {
   const [now, setNow] = useState(() => Date.now())
@@ -38,7 +38,15 @@ export function Summary({
       <section className="card hero">
         <p className="label">Vault balance</p>
         <p className="hero-number">{loading ? '...' : '--'}</p>
-        {error && <p className="field-error">Could not read the vault. Check the RPC URL and vault address in src/config.ts.</p>}
+        {error && (
+          <>
+            <p className="field-error">Could not read the vault. Check the RPC URL and vault address in src/config.ts.</p>
+            <details className="details">
+              <summary>Show error details</summary>
+              <pre>{error.message}</pre>
+            </details>
+          </>
+        )}
       </section>
     )
   }
