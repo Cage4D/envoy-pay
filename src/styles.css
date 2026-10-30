@@ -419,6 +419,30 @@ select:disabled {
   border-top: 0;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Selected filter: filled dark button plus a check icon, so it is not shown by color alone. */
+.btn-chip[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.feed-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.feed-count:focus {
+  outline: none;
+}
+
 .feed-main {
   flex: 1;
   min-width: 0;
