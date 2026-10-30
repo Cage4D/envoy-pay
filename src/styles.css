@@ -373,6 +373,11 @@ select:disabled {
   background: rgba(11, 27, 58, 0.06);
 }
 
+.banner-warn {
+  background: rgba(11, 27, 58, 0.08);
+  border: 1px solid var(--control-border);
+}
+
 .banner-ok {
   background: var(--green-bg);
   color: var(--green);

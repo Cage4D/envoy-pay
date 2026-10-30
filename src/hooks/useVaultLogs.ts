@@ -18,6 +18,9 @@ export type FeedEvent = {
 }
 
 type Stored = {
+  /** Identity of the cache: it is only reused for this exact chain and vault. */
+  chainId: number
+  vault: string
   /** Last block fully scanned, as a decimal string. */
   cursor: string
   /** Every address ever passed to PayeeUpdated (current status is read from the chain). */
@@ -25,17 +28,29 @@ type Stored = {
   events: (Omit<FeedEvent, 'blockNumber' | 'amount'> & { blockNumber: string; amount: string })[]
 }
 
-const storageKey = `envoy-vault:logs:${appConfig.chainId}:${appConfig.vaultAddress.toLowerCase()}`
+// Keyed by chain ID plus vault address, and the same pair is checked again inside the stored data,
+// so switching network or vault in src/config.ts can never reuse another vault's scan.
+const vaultKey = appConfig.vaultAddress.toLowerCase()
+const storageKey = `envoy-vault:logs:${appConfig.chainId}:${vaultKey}`
 const startCursor = appConfig.vaultDeploymentBlock - 1n
+
+function fresh(): Stored {
+  return { chainId: appConfig.chainId, vault: vaultKey, cursor: startCursor.toString(), payeeCandidates: [], events: [] }
+}
 
 function load(): Stored {
   try {
     const raw = localStorage.getItem(storageKey)
-    if (raw) return JSON.parse(raw) as Stored
+    if (raw) {
+      const parsed = JSON.parse(raw) as Stored
+      const sameVault = parsed.chainId === appConfig.chainId && parsed.vault === vaultKey
+      // Also drop a cache that starts before this vault's deployment block.
+      if (sameVault && BigInt(parsed.cursor) >= startCursor) return parsed
+    }
   } catch {
     // ignore a corrupt cache and rescan
   }
-  return { cursor: startCursor.toString(), payeeCandidates: [], events: [] }
+  return fresh()
 }
 
 const byNewest = (a: FeedEvent, b: FeedEvent) =>
@@ -131,6 +146,8 @@ export function useVaultLogs() {
             .sort(byNewest)
             .slice(0, appConfig.feedLimit)
           stored.current = {
+            chainId: appConfig.chainId,
+            vault: vaultKey,
             cursor: cursor.toString(),
             payeeCandidates: [...newCandidates],
             events: merged.map((e) => ({
@@ -168,7 +185,7 @@ export function useVaultLogs() {
 /** Current payee list: candidates from PayeeUpdated events, filtered by the live isPayee flag. */
 export function usePayees(candidates: Address[]) {
   return useQuery({
-    queryKey: ['payees', appConfig.vaultAddress, candidates],
+    queryKey: ['payees', appConfig.chainId, appConfig.vaultAddress, candidates],
     queryFn: async () => {
       const flags = await Promise.all(
         candidates.map((payee) =>

@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { AlertCircle, CheckCircle2, ExternalLink, Loader2, TriangleAlert } from 'lucide-react'
 import { formatUnits, isAddress, type Address } from 'viem'
 import { appConfig, explorerTxUrl } from '../config'
+import { describeError } from '../lib/errors'
 import * as actions from '../lib/actions'
 import { formatUsdc, parseUsdc } from '../lib/format'
 import { useTx, type TxStep } from '../hooks/useTx'
@@ -32,9 +33,11 @@ function Field({ id, label, narrow, children }: { id: string; label: string; nar
 }
 
 export function Actions({ state, onChanged }: { state: VaultState | undefined; onChanged: () => void }) {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chainId } = useAccount()
+  const { switchChainAsync, isPending: switching } = useSwitchChain()
   const { status, busy, run, dismiss } = useTx(onChanged)
   const [inputError, setInputError] = useState<string | null>(null)
+  const [switchError, setSwitchError] = useState<string | null>(null)
 
   const [depositAmount, setDepositAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
@@ -46,7 +49,9 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
   const [windowUnit, setWindowUnit] = useState<keyof typeof UNITS>('hours')
 
   const isOwner = !!state && !!address && state.owner.toLowerCase() === address.toLowerCase()
-  const locked = !isConnected || !isOwner || busy
+  // The wallet's real chain, compared with the network in src/config.ts.
+  const wrongChain = isConnected && chainId !== appConfig.chainId
+  const locked = !isConnected || !isOwner || busy || wrongChain
   const hasAgent = !!state && state.agent !== '0x0000000000000000000000000000000000000000'
 
   function start(event: { preventDefault(): void }, build: () => TxStep[] | string) {
@@ -59,6 +64,16 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
       return
     }
     void run(result)
+  }
+
+  async function switchNetwork() {
+    setSwitchError(null)
+    try {
+      await switchChainAsync({ chainId: appConfig.chainId })
+    } catch (err) {
+      const message = describeError(err)
+      if (message) setSwitchError(message)
+    }
   }
 
   const step = (label: string, send: TxStep['send']): TxStep => ({ label, send })
@@ -79,6 +94,23 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
       )}
 
       <div aria-live="polite" aria-atomic="false">
+        {wrongChain && (
+          <div className="banner banner-warn">
+            <TriangleAlert size={16} aria-hidden />
+            <span>
+              Wrong network. This dashboard uses {appConfig.chainName} (chain ID {appConfig.chainId}), but your wallet is on chain ID{' '}
+              {chainId}. Owner actions are disabled until you switch.
+            </span>
+            <button type="button" className="btn btn-primary" onClick={() => void switchNetwork()} disabled={switching}>
+              {switching ? 'Check your wallet...' : `Switch to ${appConfig.chainName}`}
+            </button>
+          </div>
+        )}
+        {switchError && (
+          <p className="banner banner-err">
+            <AlertCircle size={16} aria-hidden /> {switchError}
+          </p>
+        )}
         {status.phase === 'wallet' && (
           <p className="banner">
             <Loader2 size={16} className="spin" aria-hidden /> Confirm "{status.label}" in your wallet.
