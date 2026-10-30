@@ -73,13 +73,16 @@ A static analysis run (Slither) reported no serious findings. Its two medium not
 
 ### Environment variables
 
-The dashboard reads none. All of its chain details live in `src/config.ts`.
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `VITE_NETWORK` | Dashboard | `testnet` or `mainnet`. Optional, defaults to `testnet`. |
+| `AGENT_ENV` | Agent script | `testnet` or `mainnet`. Optional, defaults to `testnet`. |
 
-The agent demo script reads `agent/.env` (gitignored; copy `agent/.env.example`):
+All chain details for the dashboard live in `src/config.ts`. The agent script reads `agent/.env.testnet` or `agent/.env.mainnet` (gitignored; copy the matching `.example` file):
 
 | Variable | Purpose |
 | --- | --- |
-| `AGENT_PRIVATE_KEY` | Key of the registered agent. Use a dedicated test key. |
+| `AGENT_PRIVATE_KEY` | Key of the registered agent. Use a dedicated key. |
 | `RPC_URL`, `CHAIN_ID`, `CHAIN_NAME`, `EXPLORER_BASE_URL`, `USDC_DECIMALS` | Network details |
 | `VAULT_ADDRESS` | The deployed EnvoyVault |
 | `ALLOWED_PAYEE` | An address the owner has allowlisted |
@@ -102,24 +105,45 @@ bun run build      # production build in dist/
 - A live feed lists `PaymentExecuted` and `PaymentRejected` events with the reason label and a link to each transaction. It reads recent blocks in small ranges every few seconds.
 - The payee list is rebuilt from the vault's `PayeeUpdated` events, starting at the deployment block, and checked against the chain.
 
+### Testnet and mainnet
+
+`src/config.ts` has a `networks` object with a `testnet` and a `mainnet` entry. Each holds the chain ID, chain name, RPC path, upstream RPC URL, explorer URL, vault address, USDC address and vault deployment block. Testnet is filled in. Every mainnet value is `null`: nothing is guessed. Deployed values are listed in `DEPLOYMENTS.md`.
+
+Choose the network with `VITE_NETWORK`:
+
+```bash
+bun run dev                          # testnet (the default)
+VITE_NETWORK=mainnet bun run dev     # mainnet
+VITE_NETWORK=mainnet bun run build   # production build for mainnet
+```
+
+If the chosen network still has a `null` value, the dev server or build stops with an error naming the missing fields, and the app throws the same error at startup. The network name in the page header and the wrong-network banner both show the active network.
+
+Mainnet transactions use real funds and cannot be undone. Review every address and setting yourself, and get an independent audit, before you use mainnet.
+
 ### How the dashboard reaches the RPC
 
-Browsers such as Firefox and Brave can block a direct request to the RPC from a web page. So the dashboard only ever calls a same-origin path, `/rpc`, and the server forwards it:
+Browsers such as Firefox and Brave can block a direct request to the RPC from a web page. So the dashboard only ever calls a same-origin path, `/rpc/testnet` or `/rpc/mainnet`, and the server forwards it to that network's `upstreamRpcUrl`:
 
-- in development (`bun run dev`, `bun run preview`) the Vite proxy in `vite.config.ts` forwards `/rpc`
-- on Vercel, the rewrite in `vercel.json` forwards `/rpc` (POST requests pass through)
+- in development (`bun run dev`, `bun run preview`) the Vite proxies in `vite.config.ts` forward both paths
+- on Vercel, the rewrites in `vercel.json` forward both paths (POST requests pass through)
 
 All reads (vault state, balances, payees, event logs) use this path through a plain HTTP client. The wallet is only used to sign transactions. If the vault cannot be read, the page shows the underlying error under "Show error details".
 
-The agent script is separate: it runs locally and calls the RPC directly, using `RPC_URL` from `agent/.env`.
+The agent script is separate: it runs locally and calls the RPC directly, using `RPC_URL` from its env file.
 
-### Pointing it at another network or vault
+### Filling in mainnet
 
-Edit `src/config.ts`: chain ID, RPC, explorer, vault and USDC addresses, and the vault's deployment block. Keep `upstreamRpcUrl` in `src/config.ts` and the rewrite destination in `vercel.json` identical: change them together.
+Fill all of these together, then test on testnet first:
+
+1. `networks.mainnet` in `src/config.ts`: all eight fields. `rpcPath` is `/rpc/mainnet`.
+2. The `/rpc/mainnet` rewrite in `vercel.json`. Its destination is a marked placeholder (`mainnet-rpc-upstream-todo.invalid`) until you replace it with the same value as `upstreamRpcUrl`. The dev server warns if the two differ.
+3. `DEPLOYMENTS.md` and `agent/.env.mainnet`.
+4. Set `VITE_NETWORK=mainnet` in your Vercel project settings for a mainnet deploy.
 
 ### Deploy to Vercel
 
-Import the repository in Vercel and use: framework preset Vite, build command `bun run build` (or `npm run build`), output directory `dist`. No environment variables are needed. `vercel.json` already contains the `/rpc` rewrite, so reads work without any extra setup.
+Import the repository in Vercel and use: framework preset Vite, build command `bun run build` (or `npm run build`), output directory `dist`. `vercel.json` already contains the rewrites, so reads work without any extra setup. The network defaults to testnet; set `VITE_NETWORK` in the project settings to change it.
 
 ## Agent demo script
 
@@ -130,9 +154,11 @@ Runs on your machine only. It is not part of the deployed site.
 3. Set it up and run:
 
 ```bash
-cp agent/.env.example agent/.env   # then fill in AGENT_PRIVATE_KEY and ALLOWED_PAYEE
-bun run agent
+cp agent/.env.testnet.example agent/.env.testnet   # then fill in AGENT_PRIVATE_KEY and ALLOWED_PAYEE
+bun run agent                                      # AGENT_ENV defaults to testnet
 ```
+
+For mainnet, copy `agent/.env.mainnet.example` to `agent/.env.mainnet`, fill in every value yourself, and run `AGENT_ENV=mainnet bun run agent`. The script prints the network, chain name, vault address and agent address first, so you can check them before anything is sent. It stops with a clear error if the env file for the chosen network is missing.
 
 The script checks the setup, then runs three `tryPay` calls and prints each transaction hash and explorer link:
 

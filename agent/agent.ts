@@ -5,7 +5,8 @@
  *   b) tryPay to a payee that is NOT allowlisted -> PaymentRejected (reason 1)
  *   c) tryPay for more than the cap              -> PaymentRejected (reason 3)
  *
- * Config comes from agent/.env (gitignored). See agent/.env.example.
+ * Pick the network with AGENT_ENV=testnet|mainnet (default testnet). Config comes from
+ * agent/.env.testnet or agent/.env.mainnet (both gitignored). See the .example files.
  */
 import {
   BaseError,
@@ -27,13 +28,19 @@ import { fileURLToPath } from 'node:url'
 import { privateKeyToAccount } from 'viem/accounts'
 import { REJECT_REASONS, vaultAbi } from '../src/abi'
 
-// Load agent/.env from next to this file, so it works from any working directory.
-const envPath = fileURLToPath(new URL('./.env', import.meta.url))
-if (existsSync(envPath)) process.loadEnvFile(envPath)
+// Pick the network, then load agent/.env.<network> from next to this file (works from any directory).
+const agentEnv = process.env.AGENT_ENV?.trim() || 'testnet'
+if (agentEnv !== 'testnet' && agentEnv !== 'mainnet') fail(`AGENT_ENV must be "testnet" or "mainnet", but it is "${agentEnv}".`)
+const envFile = `.env.${agentEnv}`
+const envPath = fileURLToPath(new URL(`./${envFile}`, import.meta.url))
+if (!existsSync(envPath)) {
+  fail(`agent/${envFile} not found. Copy agent/${envFile}.example to agent/${envFile} and fill it in (AGENT_ENV=${agentEnv}).`)
+}
+process.loadEnvFile(envPath)
 
 function required(name: string): string {
   const value = process.env[name]?.trim()
-  if (!value) fail(`Missing ${name}. Copy agent/.env.example to agent/.env and fill it in.`)
+  if (!value) fail(`Missing ${name}. Set it in agent/${envFile} (see agent/${envFile}.example).`)
   return value
 }
 
@@ -44,7 +51,7 @@ function fail(message: string): never {
 
 function requiredAddress(name: string, fallback?: string): Address {
   const value = process.env[name]?.trim() || fallback
-  if (!value) fail(`Missing ${name}. Copy agent/.env.example to agent/.env and fill it in.`)
+  if (!value) fail(`Missing ${name}. Set it in agent/${envFile} (see agent/${envFile}.example).`)
   if (!isAddress(value)) fail(`${name} is not a valid address.`)
   return value
 }
@@ -129,8 +136,11 @@ async function attempt(step: string, payee: Address, amount: bigint): Promise<Ou
 }
 
 async function main() {
-  console.log(`Agent ${account.address}`)
-  console.log(`Vault ${vault} on ${chain.name} (${chainId})`)
+  console.log(`Network  ${agentEnv.toUpperCase()}: ${chain.name} (chain ID ${chainId})`)
+  console.log(`Config   agent/${envFile}`)
+  console.log(`Vault    ${vault}`)
+  console.log(`Agent    ${account.address}`)
+  if (agentEnv === 'mainnet') console.log('\nMAINNET: transactions use real funds and cannot be undone.')
 
   const rpcChainId = await publicClient.getChainId()
   if (rpcChainId !== chainId) fail(`RPC_URL is chain ${rpcChainId} but CHAIN_ID is ${chainId}.`)

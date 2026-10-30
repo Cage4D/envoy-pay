@@ -7,3 +7,6 @@ contracts/cache/
 traces.jsonl
 console.jsonl
 dist/
+# Agent env files: ignore every one except the .example templates
+agent/.env*
+!agent/.env.*.example
