@@ -12,6 +12,7 @@ export type TxStatus =
   | { phase: 'wallet'; label: string }
   | { phase: 'confirming'; label: string; hash: Hash }
   | { phase: 'success'; label: string; hash: Hash }
+  | { phase: 'rejected' }
   | { phase: 'error'; message: string }
 
 export type TxStep = { label: string; send: (wallet: Wallet, account: Address) => Promise<Hash> }
@@ -54,7 +55,8 @@ export function useTx(onDone: () => void) {
         onDone()
       } catch (err) {
         const message = describeError(err)
-        setStatus(message === null ? { phase: 'idle' } : { phase: 'error', message })
+        // describeError returns null when the wallet user rejected the request.
+        setStatus(message === null ? { phase: 'rejected' } : { phase: 'error', message })
       }
     },
     [address, chainId, onDone, switchChainAsync, wagmiConfig],

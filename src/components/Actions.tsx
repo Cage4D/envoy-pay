@@ -113,12 +113,12 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
         )}
         {status.phase === 'wallet' && (
           <p className="banner">
-            <Loader2 size={16} className="spin" aria-hidden /> Confirm "{status.label}" in your wallet.
+            <Loader2 size={16} className="spin" aria-hidden /> Waiting for wallet confirmation... <span className="muted">({status.label})</span>
           </p>
         )}
         {status.phase === 'confirming' && (
           <p className="banner">
-            <Loader2 size={16} className="spin" aria-hidden /> Waiting for "{status.label}" to confirm.{' '}
+            <Loader2 size={16} className="spin" aria-hidden /> Waiting for the network to confirm... <span className="muted">({status.label})</span>{' '}
             <a className="link" href={explorerTxUrl(status.hash)} target="_blank" rel="noopener noreferrer">
               View transaction <ExternalLink size={12} aria-hidden />
             </a>
@@ -130,6 +130,11 @@ export function Actions({ state, onChanged }: { state: VaultState | undefined; o
             <a className="link" href={explorerTxUrl(status.hash)} target="_blank" rel="noopener noreferrer">
               View transaction <ExternalLink size={12} aria-hidden />
             </a>
+          </p>
+        )}
+        {status.phase === 'rejected' && (
+          <p className="banner">
+            <AlertCircle size={16} aria-hidden /> Transaction rejected in wallet.
           </p>
         )}
         {status.phase === 'error' && (
