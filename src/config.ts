@@ -45,14 +45,14 @@ export const networks: Record<NetworkName, NetworkEntry> = {
   },
   // Intentionally empty. Fill in every field yourself, after your own review (see DEPLOYMENTS.md).
   mainnet: {
-    chainId: null,
-    chainName: null,
-    rpcPath: null,
-    upstreamRpcUrl: null,
-    explorerBaseUrl: null,
-    vaultAddress: null,
-    usdcAddress: null,
-    vaultDeploymentBlock: null,
+    chainId: 5042,
+    chainName: 'Arc Mainnet',
+    rpcPath: '/rpc/mainnet',
+    upstreamRpcUrl: 'https://rpc.mainnet.arc.io',
+    explorerBaseUrl: 'https://explorer.arc.io',
+    vaultAddress: '0x093617F3BD39dbc31D6bF7265B73B99dE36f8e50',
+    usdcAddress: '0x3600000000000000000000000000000000000000',
+    vaultDeploymentBlock: 28660448n,
   },
 }
 

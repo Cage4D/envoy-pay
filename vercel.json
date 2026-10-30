@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/rpc/testnet", "destination": "https://rpc.testnet.arc.io" },
-    { "source": "/rpc/mainnet", "destination": "https://mainnet-rpc-upstream-todo.invalid" }
+    { "source": "/rpc/mainnet", "destination": "https://rpc.mainnet.arc.io" }
   ]
 }

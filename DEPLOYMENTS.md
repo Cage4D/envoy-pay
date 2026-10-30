@@ -16,20 +16,20 @@ One table per network. These values must match `networks` in `src/config.ts`.
 
 ## Mainnet
 
-Not deployed. Every value is blank on purpose: fill them in yourself, after your own independent review.
-
 | Field | Value |
 | --- | --- |
-| Network | |
-| Chain ID | |
-| Vault address | |
-| Deployment tx hash | |
-| Deployment block | |
-| Explorer (vault) | |
-| Explorer (deployment tx) | |
+| Network | Arc Mainnet |
+| Chain ID | 5042 |
+| Vault address | `0x093617F3BD39dbc31D6bF7265B73B99dE36f8e50` |
+| Deployment tx hash | `0x3ebb66e6f60bdfe7920ebd48d5cc5997902e215fcff7a600199e85974eca05bb` |
+| Deployment block | 28660448 |
+| Explorer (vault) | https://explorer.arc.io/address/0x093617F3BD39dbc31D6bF7265B73B99dE36f8e50 |
+| Explorer (deployment tx) | https://explorer.arc.io/tx/0x3ebb66e6f60bdfe7920ebd48d5cc5997902e215fcff7a600199e85974eca05bb |
 
-When you deploy to mainnet, also fill these in, all together:
+These mainnet values were supplied by the owner. Arc Studio did not deploy this vault and has not verified these values onchain: confirm them yourself on the explorer before relying on them.
 
-- `networks.mainnet` in `src/config.ts` (all eight fields, including `rpcPath`, which is `/rpc/mainnet`).
-- The `/rpc/mainnet` rewrite destination in `vercel.json`. It is a placeholder (`mainnet-rpc-upstream-todo.invalid`) until you replace it with the same value as `upstreamRpcUrl`.
-- `agent/.env.mainnet`, copied from `agent/.env.mainnet.example`.
+If you change either network, keep these places in sync:
+
+- `networks` in `src/config.ts`.
+- The matching rewrite destination in `vercel.json`.
+- `agent/.env.testnet` or `agent/.env.mainnet`, copied from the `.example` files.

@@ -107,7 +107,7 @@ bun run build      # production build in dist/
 
 ### Testnet and mainnet
 
-`src/config.ts` has a `networks` object with a `testnet` and a `mainnet` entry. Each holds the chain ID, chain name, RPC path, upstream RPC URL, explorer URL, vault address, USDC address and vault deployment block. Testnet is filled in. Every mainnet value is `null`: nothing is guessed. Deployed values are listed in `DEPLOYMENTS.md`.
+`src/config.ts` has a `networks` object with a `testnet` and a `mainnet` entry. Each holds the chain ID, chain name, RPC path, upstream RPC URL, explorer URL, vault address, USDC address and vault deployment block. Both networks are filled in. The mainnet values were supplied by the vault owner and are not verified by this repo. Deployed values are listed in `DEPLOYMENTS.md`.
 
 Choose the network with `VITE_NETWORK`:
 
@@ -132,13 +132,13 @@ All reads (vault state, balances, payees, event logs) use this path through a pl
 
 The agent script is separate: it runs locally and calls the RPC directly, using `RPC_URL` from its env file.
 
-### Filling in mainnet
+### Changing network values
 
-Fill all of these together, then test on testnet first:
+If you change a network, update these together, and test on testnet first:
 
-1. `networks.mainnet` in `src/config.ts`: all eight fields. `rpcPath` is `/rpc/mainnet`.
-2. The `/rpc/mainnet` rewrite in `vercel.json`. Its destination is a marked placeholder (`mainnet-rpc-upstream-todo.invalid`) until you replace it with the same value as `upstreamRpcUrl`. The dev server warns if the two differ.
-3. `DEPLOYMENTS.md` and `agent/.env.mainnet`.
+1. `networks` in `src/config.ts`.
+2. The matching rewrite in `vercel.json`. Its destination must equal that network's `upstreamRpcUrl`. The dev server warns if they differ.
+3. `DEPLOYMENTS.md` and the matching `agent/.env.*` file.
 4. Set `VITE_NETWORK=mainnet` in your Vercel project settings for a mainnet deploy.
 
 ### Deploy to Vercel
@@ -158,7 +158,7 @@ cp agent/.env.testnet.example agent/.env.testnet   # then fill in AGENT_PRIVATE_
 bun run agent                                      # AGENT_ENV defaults to testnet
 ```
 
-For mainnet, copy `agent/.env.mainnet.example` to `agent/.env.mainnet`, fill in every value yourself, and run `AGENT_ENV=mainnet bun run agent`. The script prints the network, chain name, vault address and agent address first, so you can check them before anything is sent. It stops with a clear error if the env file for the chosen network is missing.
+For mainnet, copy `agent/.env.mainnet.example` to `agent/.env.mainnet`, add your own key and payee address, review every value yourself, and run `AGENT_ENV=mainnet bun run agent`. The script prints the network, chain name, vault address and agent address first, so you can check them before anything is sent. It stops with a clear error if the env file for the chosen network is missing.
 
 The script checks the setup, then runs three `tryPay` calls and prints each transaction hash and explorer link:
 
